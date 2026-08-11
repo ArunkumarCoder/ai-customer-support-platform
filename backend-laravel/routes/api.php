@@ -10,3 +10,5 @@ Route::get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('tickets', TicketController::class);
 });
+
+Route::post('/chat', [ChatController::class, 'store']);
