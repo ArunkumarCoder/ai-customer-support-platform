@@ -1,0 +1,38 @@
+# Environment files — never commit real secrets/keys
+**/.env
+**/.env.local
+!**/.env.example
+
+# PHP / Laravel
+backend-laravel/vendor/
+backend-laravel/storage/*.key
+backend-laravel/storage/framework/cache/*
+backend-laravel/storage/framework/sessions/*
+backend-laravel/storage/framework/views/*
+backend-laravel/storage/logs/*
+backend-laravel/bootstrap/cache/*
+!backend-laravel/storage/framework/cache/.gitignore
+!backend-laravel/storage/framework/sessions/.gitignore
+!backend-laravel/storage/framework/views/.gitignore
+
+# Python / FastAPI
+ai-service-fastapi/venv/
+ai-service-fastapi/__pycache__/
+**/__pycache__/
+*.pyc
+ai-service-fastapi/.pytest_cache/
+
+# Node / React
+frontend-react/node_modules/
+frontend-react/dist/
+frontend-react/.vite/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
