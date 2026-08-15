@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    
+    'ai' => [
+        'url' => env('AI_SERVICE_URL', 'http://localhost:8001'),
+        'secret' => env('AI_SERVICE_SECRET'),
+    ],
 
 ];
