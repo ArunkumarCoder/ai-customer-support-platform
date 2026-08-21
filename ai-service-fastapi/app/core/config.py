@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    database_url: str
     llm_provider: str = "groq"
 
     openai_api_key: str | None = None
