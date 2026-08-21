@@ -12,7 +12,7 @@ Route::get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('tickets', TicketController::class);
+    Route::post('/documents', [DocumentController::class, 'store']);
 });
 
 Route::post('/chat', [ChatController::class, 'store']);
-Route::post('/documents', [DocumentController::class, 'store']);
