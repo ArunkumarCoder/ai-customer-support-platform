@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from app.core.security import verify_internal_api_key
-from app.services.openai_client import get_chat_completion
+from app.services.llm.factory import get_llm_provider
 
 router = APIRouter()
 
@@ -22,5 +22,6 @@ class ChatResponse(BaseModel):
     dependencies=[Depends(verify_internal_api_key)],
 )
 def chat(request: ChatRequest):
-    reply = get_chat_completion([{"role": "user", "content": request.message}])
+    provider = get_llm_provider()
+    reply = provider.chat_completion([{"role": "user", "content": request.message}])
     return ChatResponse(reply=reply)
