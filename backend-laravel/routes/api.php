@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\TicketController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -14,3 +15,4 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::post('/chat', [ChatController::class, 'store']);
+Route::post('/documents', [DocumentController::class, 'store']);
