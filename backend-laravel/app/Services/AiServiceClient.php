@@ -10,29 +10,55 @@ class AiServiceClient
 {
     public function chat(string $message): string
     {
-        try {
-            $response = Http::withHeaders([
-                    'X-Internal-Api-Key' => config('services.ai.secret'),
-                ])
-                ->timeout(15)
-                ->post(config('services.ai.url') . '/chat', [
-                    'message' => $message,
-                ]);
+      try {
+          $response = Http::withHeaders([
+                  'X-Internal-Api-Key' => config('services.ai.secret'),
+              ])
+              ->timeout(15)
+              ->post(config('services.ai.url') . '/chat', [
+                  'message' => $message,
+              ]);
 
-            if ($response->successful()) {
-                return $response->json('reply', 'Sorry, I did not get a response.');
-            }
+          if ($response->successful()) {
+              return $response->json('reply', 'Sorry, I did not get a response.');
+          }
 
-            Log::warning('AI service returned an error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
+          Log::warning('AI service returned an error', [
+              'status' => $response->status(),
+              'body' => $response->body(),
+          ]);
 
-            return "Sorry, I'm having trouble answering right now. Please try again.";
-        } catch (ConnectionException $e) {
-            Log::error('AI service connection failed', ['error' => $e->getMessage()]);
+          return "Sorry, I'm having trouble answering right now. Please try again.";
+      } catch (ConnectionException $e) {
+          Log::error('AI service connection failed', ['error' => $e->getMessage()]);
 
-            return "Sorry, I'm having trouble connecting right now. Please try again shortly.";
-        }
+          return "Sorry, I'm having trouble connecting right now. Please try again shortly.";
+      }
+    }
+
+    public function ingest(int $documentId, string $text): bool
+    {
+      try {
+          $response = Http::withHeaders([
+                  'X-Internal-Api-Key' => config('services.ai.secret'),
+              ])
+              ->timeout(30)
+              ->post(config('services.ai.url') . '/ingest', [
+                  'document_id' => $documentId,
+                  'text' => $text,
+              ]);
+
+          if (! $response->successful()) {
+              Log::warning('Document ingest failed', [
+                  'document_id' => $documentId,
+                  'status' => $response->status(),
+              ]);
+          }
+
+          return $response->successful();
+      } catch (ConnectionException $e) {
+          Log::error('Document ingest connection failed', ['error' => $e->getMessage()]);
+          return false;
+      }
     }
 }

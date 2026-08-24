@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Document; 
+use App\Jobs\IngestDocumentJob;
 
 class DocumentController extends Controller
 {
@@ -33,6 +34,8 @@ class DocumentController extends Controller
             'source_file' => $path,
             'uploaded_by' => $request->user()->id,
         ]);
+
+        IngestDocumentJob::dispatch($document);
 
         return response()->json($document, 201);
     }
