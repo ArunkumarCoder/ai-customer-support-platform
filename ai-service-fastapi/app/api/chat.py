@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.core.security import verify_internal_api_key
+from app.db.session import get_db
 from app.services.llm.factory import get_llm_provider
+from app.services.prompt_builder import build_rag_messages
+from app.services.retriever import retrieve_relevant_chunks
 
 router = APIRouter()
 
@@ -21,7 +25,13 @@ class ChatResponse(BaseModel):
     response_model=ChatResponse,
     dependencies=[Depends(verify_internal_api_key)],
 )
-def chat(request: ChatRequest):
+def chat(request: ChatRequest, db: Session = Depends(get_db)):
+    retrieved = retrieve_relevant_chunks(request.message, db)
+    print(f"[chat] retrieved {len(retrieved)} chunks, "
+          f"distances={[round(r['distance'], 3) for r in retrieved]}")
+
+    messages = build_rag_messages(request.message, [r["text"] for r in retrieved])
+
     provider = get_llm_provider()
-    reply = provider.chat_completion([{"role": "user", "content": request.message}])
+    reply = provider.chat_completion(messages)
     return ChatResponse(reply=reply)
