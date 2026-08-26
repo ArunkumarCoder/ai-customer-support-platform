@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     groq_model: str = "openai/gpt-oss-120b"
 
+    confidence_distance_threshold: float = 0.4
+
     internal_api_key: str
 
     class Config:

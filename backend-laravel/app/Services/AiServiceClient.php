@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class AiServiceClient
 {
-    public function chat(string $message): string
+    public function chat(string $message): array
     {
       try {
           $response = Http::withHeaders([
@@ -20,7 +20,10 @@ class AiServiceClient
               ]);
 
           if ($response->successful()) {
-              return $response->json('reply', 'Sorry, I did not get a response.');
+              return [
+                  'reply' => $response->json('reply', 'Sorry, I did not get a response.'),
+                  'escalate' => $response->json('escalate', false),
+              ];
           }
 
           Log::warning('AI service returned an error', [
@@ -28,11 +31,17 @@ class AiServiceClient
               'body' => $response->body(),
           ]);
 
-          return "Sorry, I'm having trouble answering right now. Please try again.";
+          return [
+              'reply' => "Sorry, I'm having trouble answering right now. Please try again.",
+              'escalate' => true,
+          ];
       } catch (ConnectionException $e) {
           Log::error('AI service connection failed', ['error' => $e->getMessage()]);
 
-          return "Sorry, I'm having trouble connecting right now. Please try again shortly.";
+          return [
+              'reply' => "Sorry, I'm having trouble connecting right now. Please try again shortly.",
+              'escalate' => true,
+          ];
       }
     }
 
