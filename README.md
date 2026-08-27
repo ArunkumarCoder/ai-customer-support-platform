@@ -1,10 +1,10 @@
 # AI Customer Support Platform
 
-An enterprise-style AI-powered customer support platform combining a **Laravel** backend for business logic and ticketing, a **FastAPI** microservice for AI/RAG operations, and a **React** frontend for both the customer chat widget and the admin dashboard — backed by a shared **PostgreSQL** database (with `pgvector`) and the **OpenAI** API.
+An enterprise-style AI-powered customer support platform combining a **Laravel** backend for business logic and ticketing, a **FastAPI** microservice for AI/RAG operations, and a **React** frontend for both the customer chat widget and the admin dashboard — backed by a shared **PostgreSQL** database (with `pgvector`) and a pluggable LLM layer (**OpenAI**, **Anthropic**, or **Groq**).
 
 Built as a portfolio piece to demonstrate polyglot microservice architecture, applied AI (RAG, sentiment analysis, summarization), clean API design, and enterprise development practices (auth, async queues, testing, deployment).
 
-> 🚧 **Status: Week 1 of 6 — Foundations.** Ticket CRUD and auth scaffolding exist on the Laravel side, the FastAPI service currently exposes a bare `/chat` stub, and the React widget shell is in place. See [Current Progress](#current-progress) below.
+> 🚧 **Status: Week 2 complete, Week 3 started — Admin dashboard.** Full chat flow is wired end-to-end: the React widget talks to Laravel, which tracks anonymous visitors as tickets and forwards messages to FastAPI's RAG pipeline (pgvector retrieval + the configured LLM provider). Low-confidence answers automatically escalate the ticket for human follow-up. Real agent authentication (`/login`, `/logout`, `/me` via Sanctum tokens) is in place; the dashboard UI itself is still to come. See [Current Progress](#current-progress) below.
 
 ## Architecture
 
@@ -44,11 +44,11 @@ See [CLAUDE.md](CLAUDE.md) for the full architecture rules, data flows, and sche
 | Layer | Stack |
 |---|---|
 | Backend (business logic) | Laravel 12, PHP 8.2+, Sanctum, Redis-backed queues |
-| AI microservice | FastAPI, Python 3.11+, SQLAlchemy, pgvector, OpenAI API |
+| AI microservice | FastAPI, Python 3.11+, SQLAlchemy + Alembic, pgvector, psycopg2, sentence-transformers |
 | Frontend | React 18 + Vite + TypeScript, axios, react-router |
 | Database | PostgreSQL 15+ with the `pgvector` extension |
 | Queue / cache | Redis |
-| AI provider | OpenAI — `text-embedding-3-small` for embeddings, a `gpt-4o-mini`-class model for chat/sentiment/summarization |
+| AI provider | Pluggable via `LLM_PROVIDER` — OpenAI, Anthropic, or Groq (strategy pattern in `app/services/llm/`); Groq's free tier is the default for local dev. Embeddings via local `sentence-transformers` (`all-MiniLM-L6-v2`) |
 
 ## Repository Structure
 
@@ -69,7 +69,7 @@ ai-customer-support-platform/
 - Python 3.11+
 - Node.js 18+
 - Docker (for Postgres + Redis via `docker-compose.yml`)
-- An OpenAI API key
+- An API key for at least one supported LLM provider (OpenAI, Anthropic, or Groq — Groq offers a free tier, easiest for local dev)
 
 ## Local Setup
 
@@ -93,6 +93,7 @@ composer install
 cp .env.example .env   # set DB_*, REDIS_*, AI_SERVICE_URL, AI_SERVICE_SECRET
 php artisan key:generate
 php artisan migrate
+php artisan db:seed --class=AgentSeeder   # creates admin@example.com / password for /login
 php artisan serve       # http://localhost:8000
 php artisan queue:work  # in a separate terminal
 ```
@@ -103,7 +104,7 @@ php artisan queue:work  # in a separate terminal
 cd ai-service-fastapi
 python -m venv venv && source venv/bin/activate   # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
-cp .env.example .env   # set DATABASE_URL, OPENAI_API_KEY, INTERNAL_API_KEY (must match Laravel's AI_SERVICE_SECRET)
+cp .env.example .env   # set LLM_PROVIDER (openai|anthropic|groq) + that provider's API key/model, INTERNAL_API_KEY (must match Laravel's AI_SERVICE_SECRET)
 uvicorn app.main:app --reload --port 8001
 ```
 
@@ -128,12 +129,13 @@ cd ai-service-fastapi && pytest
 
 ## Current Progress
 
-- [x] Laravel ticket CRUD API with validation + feature tests
-- [x] FastAPI skeleton with a bare `/chat` endpoint
-- [x] React scaffold with a basic chat widget
-- [ ] End-to-end smoke test across all three services
-- [ ] pgvector setup, document ingestion, RAG retrieval, full chatbot flow
-- [ ] Admin dashboard (ticket list/detail/filter, agent replies, role-based access)
+- [x] FastAPI `/chat` endpoint wired to a pluggable LLM provider (OpenAI/Anthropic/Groq)
+- [x] End-to-end smoke test across all three services
+- [x] `tickets`/`messages` schema, document upload + async ingestion pipeline (pgvector + `sentence-transformers`), RAG retrieval, full chatbot flow
+- [x] Confidence-based auto-escalation: low-similarity retrieval, no matching documents, or an unreachable AI service all flag a ticket `escalated`
+- [x] React chat widget tracking anonymous visitors, showing a human-handoff notice on escalation
+- [x] Real agent authentication (`POST /login`, `POST /logout`, `GET /me` via Sanctum tokens against the `agents` table, seeded via `AgentSeeder`)
+- [ ] Admin dashboard (ticket list/detail/filter, agent replies, role-based access) — `TicketController` is still an unimplemented stub
 - [ ] Sentiment + email summarization endpoints and queue jobs
 - [ ] Testing/hardening pass, rate limiting, latency checks
 - [ ] Deployment of all services + demo
