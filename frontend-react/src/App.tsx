@@ -1,11 +1,16 @@
 import { useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import ChatWidget from './widget/ChatWidget'
+import { AuthProvider } from './auth/AuthContext'
+import ProtectedRoute from './auth/ProtectedRoute'
+import LoginPage from './dashboard/LoginPage'
+import TicketListPage from './dashboard/TicketListPage'
 import './App.css'
 
-function App() {
+function Home() {
   const [count, setCount] = useState(0)
 
   return (
@@ -121,6 +126,23 @@ function App() {
         <ChatWidget />
       </div>
     </>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<TicketListPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 
