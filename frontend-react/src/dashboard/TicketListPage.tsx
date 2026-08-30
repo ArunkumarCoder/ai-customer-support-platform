@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { fetchTickets } from '../api/ticketsApi'
 import type { Ticket } from '../api/ticketsApi'
@@ -53,7 +53,9 @@ export default function TicketListPage() {
           <tbody>
             {tickets.map((ticket) => (
               <tr key={ticket.id}>
-                <td>{ticket.id}</td>
+                <td>
+                  <Link to={`/dashboard/tickets/${ticket.id}`}>{ticket.id}</Link>
+                </td>
                 <td>{ticket.status}</td>
                 <td>{ticket.priority}</td>
                 <td>{new Date(ticket.created_at).toLocaleString()}</td>

@@ -27,17 +27,25 @@ class TicketController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Ticket $ticket)
     {
-        //
+        $ticket->load(['messages' => fn ($q) => $q->orderBy('created_at')]);
+
+        return $ticket;
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Ticket $ticket)
     {
-        //
+        $validated = $request->validate([
+            'status' => 'required|string|in:open,in_progress,escalated,resolved,closed',
+        ]);
+
+        $ticket->update($validated);
+
+        return $ticket;
     }
 
     /**
