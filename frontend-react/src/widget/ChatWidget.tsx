@@ -54,9 +54,9 @@ export default function ChatWidget() {
 
   return (
     <div className="chat-widget">
-      <div className="chat-widget__header">Support Chat</div>
+      <div className="chat-widget-header">Support Chat</div>
 
-      <div className="chat-widget__messages">
+      <div className="chat-widget-messages">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -65,11 +65,11 @@ export default function ChatWidget() {
             {message.text}
           </div>
         ))}
+        {sending && <div className="typing-indicator">Assistant is typing…</div>}
       </div>
 
-      <div className="chat-widget__input-row">
+      <div className="chat-widget-input">
         <input
-          className="chat-widget__input"
           type="text"
           value={input}
           onChange={(event) => setInput(event.target.value)}
@@ -78,7 +78,7 @@ export default function ChatWidget() {
           disabled={sending}
         />
         <button
-          className="chat-widget__send"
+          className="btn-primary"
           type="button"
           onClick={() => void handleSend()}
           disabled={sending || !input.trim()}

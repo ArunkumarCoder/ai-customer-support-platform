@@ -3,7 +3,6 @@ import type { FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchTicket, replyToTicket, updateTicketStatus } from '../api/ticketsApi'
 import type { TicketDetail } from '../api/ticketsApi'
-import './dashboard.css'
 
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -66,45 +65,44 @@ export default function TicketDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="dashboard-page">
-        <p>Loading ticket...</p>
-      </div>
-    )
+    return <p>Loading ticket...</p>
   }
 
   if (!ticket) {
     return (
-      <div className="dashboard-page">
+      <>
         <Link to="/dashboard">&larr; Back to tickets</Link>
         <div className="form-error">{error ?? 'Ticket not found.'}</div>
-      </div>
+      </>
     )
   }
 
   const isResolved = ticket.status === 'resolved'
 
   return (
-    <div className="dashboard-page">
+    <>
       <Link to="/dashboard">&larr; Back to tickets</Link>
 
       <div className="ticket-detail-header">
         <h1>Ticket #{ticket.id}</h1>
-        <span className="ticket-detail-meta">
-          Status: <strong>{ticket.status}</strong> &middot; Priority: <strong>{ticket.priority}</strong>
-        </span>
+        <span className={`badge badge-${ticket.status}`}>{ticket.status}</span>
+        <span className="ticket-detail-priority">Priority: {ticket.priority}</span>
       </div>
 
       {error && <div className="form-error">{error}</div>}
 
-      <div className="message-thread">
-        {ticket.messages.map((message) => (
-          <div key={message.id} className={`message-bubble message-bubble--${message.sender}`}>
-            <div className="message-bubble__sender">{message.sender}</div>
-            <div className="message-bubble__body">{message.body}</div>
-          </div>
-        ))}
-      </div>
+      {ticket.messages.length === 0 ? (
+        <div className="empty-state">No messages yet.</div>
+      ) : (
+        <div className="message-thread">
+          {ticket.messages.map((message) => (
+            <div key={message.id} className={`message message-${message.sender}`}>
+              <div className="message-sender">{message.sender}</div>
+              <div>{message.body}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {!isResolved && (
         <>
@@ -116,14 +114,14 @@ export default function TicketDetailPage() {
               rows={3}
               required
             />
-            <button type="submit" disabled={submitting}>
+            <button type="submit" className="btn-primary" disabled={submitting}>
               {submitting ? 'Sending...' : 'Send reply'}
             </button>
           </form>
 
           <button
             type="button"
-            className="resolve-button"
+            className="btn-secondary"
             onClick={() => void handleResolve()}
             disabled={resolving}
           >
@@ -131,6 +129,6 @@ export default function TicketDetailPage() {
           </button>
         </>
       )}
-    </div>
+    </>
   )
 }

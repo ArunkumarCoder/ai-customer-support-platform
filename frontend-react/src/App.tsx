@@ -7,6 +7,7 @@ import ChatWidget from './widget/ChatWidget'
 import { AuthProvider } from './auth/AuthContext'
 import ProtectedRoute from './auth/ProtectedRoute'
 import LoginPage from './dashboard/LoginPage'
+import DashboardLayout from './dashboard/DashboardLayout'
 import TicketListPage from './dashboard/TicketListPage'
 import TicketDetailPage from './dashboard/TicketDetailPage'
 import './App.css'
@@ -138,8 +139,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<TicketListPage />} />
-            <Route path="/dashboard/tickets/:id" element={<TicketDetailPage />} />
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<TicketListPage />} />
+              <Route path="/dashboard/tickets/:id" element={<TicketDetailPage />} />
+            </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
