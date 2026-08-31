@@ -21,9 +21,15 @@ class MessageController extends Controller
             'body' => $validated['body'],
         ]);
 
+        if (is_null($ticket->assigned_agent_id)) {
+            $ticket->assigned_agent_id = $request->user()->id;
+        }
+
         if ($ticket->status === 'escalated') {
             $ticket->update(['status' => 'in_progress']);
         }
+
+        $ticket->save();
 
         return response()->json($message, 201);
     }

@@ -10,15 +10,17 @@ export default function TicketListPage() {
   const navigate = useNavigate()
 
   const [tickets, setTickets] = useState<Ticket[]>([])
+  const [filters, setFilters] = useState<TicketFilters>({});
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchTickets()
+    setLoading(true);
+    fetchTickets(filters)
       .then(setTickets)
       .catch(() => setError('Failed to load tickets.'))
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, [filters]);
 
   const handleLogout = async () => {
     await logout()

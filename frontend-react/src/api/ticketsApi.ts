@@ -21,9 +21,18 @@ export interface TicketDetail extends Ticket {
   messages: Message[]
 }
 
-export async function fetchTickets(): Promise<Ticket[]> {
-  const response = await apiClient.get<Ticket[]>('/tickets')
-  return response.data
+export interface TicketFilters {
+  status?: string;
+  priority?: string;
+  sentiment?: string;
+}
+
+export async function fetchTickets(filters: TicketFilters = {}): Promise<Ticket[]> {
+  const params = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v)
+  );
+  const response = await apiClient.get('/tickets', { params });
+  return response.data.data ?? response.data;
 }
 
 export async function fetchTicket(id: number): Promise<TicketDetail> {

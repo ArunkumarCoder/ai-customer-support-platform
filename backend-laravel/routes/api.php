@@ -19,6 +19,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::apiResource('tickets', TicketController::class);
     Route::post('/tickets/{ticket}/messages', [MessageController::class, 'store']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::post('/documents', [DocumentController::class, 'store']);
 });
 

@@ -11,9 +11,28 @@ class TicketController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Ticket::orderBy('created_at', 'desc')->get();
+        $query = Ticket::query();
+
+        if ($request->user()->role !== 'admin') {
+            $query->where(function ($q) use ($request) {
+                $q->whereNull('assigned_agent_id')
+                  ->orWhere('assigned_agent_id', $request->user()->id);
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->query('status'));
+        }
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->query('priority'));
+        }
+        if ($request->filled('sentiment')) {
+            $query->where('sentiment_summary', $request->query('sentiment'));
+        }
+
+        return response()->json($query->latest()->get());
     }
 
     /**
