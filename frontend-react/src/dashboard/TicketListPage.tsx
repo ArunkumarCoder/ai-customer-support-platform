@@ -104,6 +104,7 @@ export default function TicketListPage() {
               <th>ID</th>
               <th>Status</th>
               <th>Priority</th>
+              <th>Sentiment</th>
               <th>Created</th>
             </tr>
           </thead>
@@ -117,6 +118,15 @@ export default function TicketListPage() {
                   <span className={`badge badge-${ticket.status}`}>{ticket.status}</span>
                 </td>
                 <td>{ticket.priority}</td>
+                <td>
+                  {ticket.sentiment_summary ? (
+                    <span className={`badge badge-sentiment-${ticket.sentiment_summary}`}>
+                      {ticket.sentiment_summary}
+                    </span>
+                  ) : (
+                    '—'
+                  )}
+                </td>
                 <td>{new Date(ticket.created_at).toLocaleString()}</td>
               </tr>
             ))}

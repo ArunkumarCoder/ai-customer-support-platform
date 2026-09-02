@@ -337,6 +337,25 @@ table a:hover {
   color: var(--gray-text);
 }
 
+.badge-sentiment-positive {
+  background: rgba(46, 139, 87, 0.14);
+  color: var(--green);
+}
+
+.badge-sentiment-neutral {
+  background: #eceef1;
+  color: var(--gray-text);
+}
+
+.badge-sentiment-negative {
+  background: rgba(179, 58, 58, 0.14);
+  color: var(--red);
+}
+
+.message-sentiment-badge {
+  margin-left: 6px;
+}
+
 /* --- Ticket detail --- */
 
 .ticket-detail-header {

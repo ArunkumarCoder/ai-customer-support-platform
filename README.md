@@ -4,7 +4,7 @@ An enterprise-style AI-powered customer support platform combining a **Laravel**
 
 Built as a portfolio piece to demonstrate polyglot microservice architecture, applied AI (RAG, sentiment analysis, summarization), clean API design, and enterprise development practices (auth, async queues, testing, deployment).
 
-> 🚧 **Status: Week 2 complete, Week 3 started — Admin dashboard.** Full chat flow is wired end-to-end: the React widget talks to Laravel, which tracks anonymous visitors as tickets and forwards messages to FastAPI's RAG pipeline (pgvector retrieval + the configured LLM provider). Low-confidence answers automatically escalate the ticket for human follow-up. Real agent authentication (`/login`, `/logout`, `/me` via Sanctum tokens) is in place; the dashboard UI itself is still to come. See [Current Progress](#current-progress) below.
+> 🚧 **Status: Week 3 complete — Admin dashboard.** Full chat flow is wired end-to-end: the React widget talks to Laravel, which tracks anonymous visitors as tickets and forwards messages to FastAPI's RAG pipeline (pgvector retrieval + the configured LLM provider). Low-confidence answers automatically escalate the ticket for human follow-up. Agents authenticate through a real React login page backed by Sanctum tokens, see a role-filtered, filterable ticket list (non-admins only see unassigned/their own tickets), open a ticket to read the full conversation, reply (which un-escalates it to `in_progress` and auto-assigns it), and mark it resolved. Document upload is admin-only. See [Current Progress](#current-progress) below.
 
 ## Architecture
 
@@ -135,7 +135,9 @@ cd ai-service-fastapi && pytest
 - [x] Confidence-based auto-escalation: low-similarity retrieval, no matching documents, or an unreachable AI service all flag a ticket `escalated`
 - [x] React chat widget tracking anonymous visitors, showing a human-handoff notice on escalation
 - [x] Real agent authentication (`POST /login`, `POST /logout`, `GET /me` via Sanctum tokens against the `agents` table, seeded via `AgentSeeder`)
-- [ ] Admin dashboard (ticket list/detail/filter, agent replies, role-based access) — `TicketController` is still an unimplemented stub
+- [x] React login page + protected ticket list dashboard (`AuthContext`, `ProtectedRoute`, real `GET /tickets` data)
+- [x] Ticket detail view + agent reply flow: full conversation thread, reply (flips `escalated` → `in_progress`, auto-assigns the ticket), mark resolved
+- [x] Role-based ticket visibility (non-admins see only unassigned/own tickets), admin-only document upload, status/priority/sentiment filter dropdowns
 - [ ] Sentiment + email summarization endpoints and queue jobs
 - [ ] Testing/hardening pass, rate limiting, latency checks
 - [ ] Deployment of all services + demo

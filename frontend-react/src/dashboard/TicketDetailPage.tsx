@@ -86,6 +86,11 @@ export default function TicketDetailPage() {
       <div className="ticket-detail-header">
         <h1>Ticket #{ticket.id}</h1>
         <span className={`badge badge-${ticket.status}`}>{ticket.status}</span>
+        {ticket.sentiment_summary && (
+          <span className={`badge badge-sentiment-${ticket.sentiment_summary}`}>
+            {ticket.sentiment_summary}
+          </span>
+        )}
         <span className="ticket-detail-priority">Priority: {ticket.priority}</span>
       </div>
 
@@ -97,7 +102,14 @@ export default function TicketDetailPage() {
         <div className="message-thread">
           {ticket.messages.map((message) => (
             <div key={message.id} className={`message message-${message.sender}`}>
-              <div className="message-sender">{message.sender}</div>
+              <div className="message-sender">
+                {message.sender}
+                {message.sentiment_label && (
+                  <span className={`badge badge-sentiment-${message.sentiment_label} message-sentiment-badge`}>
+                    {message.sentiment_label}
+                  </span>
+                )}
+              </div>
               <div>{message.body}</div>
             </div>
           ))}

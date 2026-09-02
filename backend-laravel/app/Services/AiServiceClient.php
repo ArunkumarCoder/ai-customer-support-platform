@@ -45,6 +45,37 @@ class AiServiceClient
       }
     }
 
+    public function sentiment(string $text): array
+    {
+      try {
+          $response = Http::withHeaders([
+                  'X-Internal-Api-Key' => config('services.ai.secret'),
+              ])
+              ->timeout(15)
+              ->post(config('services.ai.url') . '/sentiment', [
+                  'text' => $text,
+              ]);
+
+          if ($response->successful()) {
+              return [
+                  'label' => $response->json('label', 'neutral'),
+                  'score' => $response->json('score', 0.5),
+              ];
+          }
+
+          Log::warning('Sentiment analysis returned an error', [
+              'status' => $response->status(),
+              'body' => $response->body(),
+          ]);
+
+          return ['label' => 'neutral', 'score' => 0.5];
+      } catch (ConnectionException $e) {
+          Log::error('Sentiment analysis connection failed', ['error' => $e->getMessage()]);
+
+          return ['label' => 'neutral', 'score' => 0.5];
+      }
+    }
+
     public function ingest(int $documentId, string $text): bool
     {
       try {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\AnalyzeSentimentJob;
 use App\Models\Message;
 use App\Models\Ticket;
 use App\Services\AiServiceClient;
@@ -34,11 +35,13 @@ class ChatController extends Controller
             ]);
         }
 
-        Message::create([
+        $customerMessage = Message::create([
             'ticket_id' => $ticket->id,
             'sender' => 'customer',
             'body' => $validated['message'],
         ]);
+
+        AnalyzeSentimentJob::dispatch($customerMessage);
 
         $aiResponse = $this->aiServiceClient->chat($validated['message']);
 
