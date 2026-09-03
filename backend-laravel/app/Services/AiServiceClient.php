@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AiServiceClient
 {
@@ -73,6 +74,34 @@ class AiServiceClient
           Log::error('Sentiment analysis connection failed', ['error' => $e->getMessage()]);
 
           return ['label' => 'neutral', 'score' => 0.5];
+      }
+    }
+
+    public function summarize(string $text): string
+    {
+      try {
+          $response = Http::withHeaders([
+                  'X-Internal-Api-Key' => config('services.ai.secret'),
+              ])
+              ->timeout(15)
+              ->post(config('services.ai.url') . '/summarize', [
+                  'text' => $text,
+              ]);
+
+          if ($response->successful()) {
+              return $response->json('summary', Str::limit($text, 200));
+          }
+
+          Log::warning('Summarization returned an error', [
+              'status' => $response->status(),
+              'body' => $response->body(),
+          ]);
+
+          return Str::limit($text, 200);
+      } catch (ConnectionException $e) {
+          Log::error('Summarization connection failed', ['error' => $e->getMessage()]);
+
+          return Str::limit($text, 200);
       }
     }
 

@@ -13,6 +13,7 @@ class Ticket extends Model
         'priority',
         'sentiment_summary',
         'assigned_agent_id',
+        'summary',
     ];
 
     public function messages()

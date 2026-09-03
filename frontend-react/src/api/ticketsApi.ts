@@ -6,6 +6,7 @@ export interface Ticket {
   status: string
   priority: string
   sentiment_summary: string | null
+  summary: string | null
   created_at: string
 }
 

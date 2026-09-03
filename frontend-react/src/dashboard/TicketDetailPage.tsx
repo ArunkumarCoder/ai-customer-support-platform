@@ -96,6 +96,13 @@ export default function TicketDetailPage() {
 
       {error && <div className="form-error">{error}</div>}
 
+      {ticket.summary && (
+        <div className="ai-summary-callout">
+          <div className="ai-summary-callout__label">AI Summary</div>
+          <p>{ticket.summary}</p>
+        </div>
+      )}
+
       {ticket.messages.length === 0 ? (
         <div className="empty-state">No messages yet.</div>
       ) : (
