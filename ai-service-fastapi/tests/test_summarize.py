@@ -51,6 +51,18 @@ def test_summarize_endpoint_without_header_returns_422(mock_get_provider):
 
 
 @patch("app.services.summarizer.get_llm_provider")
+def test_summarize_endpoint_with_empty_text_returns_422(mock_get_provider):
+    response = client.post(
+        "/summarize",
+        json={"text": ""},
+        headers={"X-Internal-Api-Key": settings.internal_api_key},
+    )
+
+    assert response.status_code == 422
+    mock_get_provider.assert_not_called()
+
+
+@patch("app.services.summarizer.get_llm_provider")
 def test_summarize_endpoint_short_input_skips_llm_call(mock_get_provider):
     response = client.post(
         "/summarize",

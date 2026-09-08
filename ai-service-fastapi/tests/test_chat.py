@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.main import app
 
 client = TestClient(app)
@@ -110,3 +111,65 @@ def test_chat_with_missing_message_field_returns_422(mock_retrieve, mock_get_pro
     assert response.status_code == 422
     mock_get_provider.assert_not_called()
     mock_retrieve.assert_not_called()
+
+
+@patch("app.api.chat.get_llm_provider")
+@patch("app.api.chat.retrieve_relevant_chunks")
+def test_chat_with_empty_message_returns_422(mock_retrieve, mock_get_provider):
+    response = client.post(
+        "/chat",
+        json={"message": ""},
+        headers={"X-Internal-Api-Key": settings.internal_api_key},
+    )
+
+    assert response.status_code == 422
+    mock_get_provider.assert_not_called()
+    mock_retrieve.assert_not_called()
+
+
+@patch("app.api.chat.get_llm_provider")
+@patch("app.api.chat.retrieve_relevant_chunks")
+def test_chat_with_message_over_max_length_returns_422(mock_retrieve, mock_get_provider):
+    response = client.post(
+        "/chat",
+        json={"message": "a" * 2001},
+        headers={"X-Internal-Api-Key": settings.internal_api_key},
+    )
+
+    assert response.status_code == 422
+    mock_get_provider.assert_not_called()
+    mock_retrieve.assert_not_called()
+
+
+@patch("app.api.chat.get_llm_provider")
+@patch("app.api.chat.retrieve_relevant_chunks")
+def test_chat_with_non_positive_ticket_id_returns_422(mock_retrieve, mock_get_provider):
+    response = client.post(
+        "/chat",
+        json={"message": "Hello", "ticket_id": 0},
+        headers={"X-Internal-Api-Key": settings.internal_api_key},
+    )
+
+    assert response.status_code == 422
+    mock_get_provider.assert_not_called()
+    mock_retrieve.assert_not_called()
+
+
+@patch("app.api.chat.get_llm_provider")
+@patch("app.api.chat.retrieve_relevant_chunks")
+def test_chat_is_rate_limited_after_exceeding_limit(mock_retrieve, mock_get_provider):
+    # Reset the shared in-memory limiter storage first so this test's result
+    # doesn't depend on how many successful /chat calls earlier tests made.
+    limiter.reset()
+
+    mock_retrieve.return_value = []
+    mock_get_provider.return_value = _mock_provider("Let me connect you with a human agent.")
+
+    headers = {"X-Internal-Api-Key": settings.internal_api_key}
+
+    for _ in range(100):
+        response = client.post("/chat", json={"message": "Hello"}, headers=headers)
+        assert response.status_code == 200
+
+    response = client.post("/chat", json={"message": "Hello"}, headers=headers)
+    assert response.status_code == 429

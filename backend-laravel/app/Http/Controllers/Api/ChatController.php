@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ChatMessageRequest;
 use App\Jobs\AnalyzeSentimentJob;
 use App\Models\Message;
 use App\Models\Ticket;
 use App\Services\AiServiceClient;
-use Illuminate\Http\Request;
 
 class ChatController extends Controller
 {
@@ -15,12 +15,9 @@ class ChatController extends Controller
     {
     }
 
-    public function store(Request $request)
+    public function store(ChatMessageRequest $request)
     {
-        $validated = $request->validate([
-            'message' => 'required|string|max:2000',
-            'visitor_id' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $ticket = Ticket::where('visitor_id', $validated['visitor_id'])
             ->whereNotIn('status', ['resolved', 'closed'])

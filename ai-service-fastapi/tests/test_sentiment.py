@@ -38,6 +38,18 @@ def test_sentiment_endpoint_without_header_returns_422(mock_get_provider):
 
 
 @patch("app.services.sentiment.get_llm_provider")
+def test_sentiment_endpoint_with_empty_text_returns_422(mock_get_provider):
+    response = client.post(
+        "/sentiment",
+        json={"text": ""},
+        headers={"X-Internal-Api-Key": settings.internal_api_key},
+    )
+
+    assert response.status_code == 422
+    mock_get_provider.assert_not_called()
+
+
+@patch("app.services.sentiment.get_llm_provider")
 def test_analyze_sentiment_falls_back_to_neutral_on_invalid_json(mock_get_provider):
     mock_get_provider.return_value = _mock_provider("this is not json at all")
 

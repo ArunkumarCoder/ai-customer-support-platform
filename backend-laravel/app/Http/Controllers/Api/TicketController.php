@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\UpdateTicketRequest;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 
@@ -56,13 +57,9 @@ class TicketController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Ticket $ticket)
+    public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
-        $validated = $request->validate([
-            'status' => 'required|string|in:open,in_progress,escalated,resolved,closed',
-        ]);
-
-        $ticket->update($validated);
+        $ticket->update($request->validated());
 
         return $ticket;
     }

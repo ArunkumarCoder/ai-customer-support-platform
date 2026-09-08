@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
+from app.core.rate_limit import limiter
 from app.core.security import verify_internal_api_key
 from app.db.models import DocumentChunk
 from app.db.session import get_db
@@ -15,8 +16,9 @@ router = APIRouter()
     response_model=IngestResponse,
     dependencies=[Depends(verify_internal_api_key)],
 )
-def ingest(request: IngestRequest, db: Session = Depends(get_db)):
-    chunks = chunk_text(request.text)
+@limiter.limit("100/minute")
+def ingest(request: Request, body: IngestRequest, db: Session = Depends(get_db)):
+    chunks = chunk_text(body.text)
     if not chunks:
         return IngestResponse(chunks_created=0)
 
@@ -24,7 +26,7 @@ def ingest(request: IngestRequest, db: Session = Depends(get_db)):
 
     for chunk_value, embedding in zip(chunks, embeddings):
         db.add(DocumentChunk(
-            document_id=request.document_id,
+            document_id=body.document_id,
             chunk_text=chunk_value,
             embedding=embedding,
         ))

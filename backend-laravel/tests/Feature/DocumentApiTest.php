@@ -77,6 +77,43 @@ class DocumentApiTest extends TestCase
         $this->assertDatabaseCount('documents', 0);
     }
 
+    public function test_document_upload_with_missing_title_returns_422(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+        Http::fake();
+
+        $admin = $this->makeAgent('admin');
+        $file = UploadedFile::fake()->create('policy.txt', 10, 'text/plain');
+
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/documents', [
+            'file' => $file,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['title']);
+        Queue::assertNothingPushed();
+    }
+
+    public function test_document_upload_with_disallowed_file_type_returns_422(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+        Http::fake();
+
+        $admin = $this->makeAgent('admin');
+        $file = UploadedFile::fake()->create('malware.exe', 10, 'application/octet-stream');
+
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/documents', [
+            'title' => 'Refund Policy',
+            'file' => $file,
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['file']);
+        Queue::assertNothingPushed();
+    }
+
     public function test_unauthenticated_request_to_upload_document_returns_401(): void
     {
         Storage::fake('local');

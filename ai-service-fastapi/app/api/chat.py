@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.core.security import verify_internal_api_key
 from app.db.session import get_db
 from app.services.llm.factory import get_llm_provider
@@ -13,8 +14,8 @@ router = APIRouter()
 
 
 class ChatRequest(BaseModel):
-    message: str
-    ticket_id: int | None = None
+    message: str = Field(min_length=1, max_length=2000)
+    ticket_id: int | None = Field(default=None, gt=0)
 
 
 class ChatResponse(BaseModel):
@@ -27,8 +28,9 @@ class ChatResponse(BaseModel):
     response_model=ChatResponse,
     dependencies=[Depends(verify_internal_api_key)],
 )
-def chat(request: ChatRequest, db: Session = Depends(get_db)):
-    retrieved = retrieve_relevant_chunks(request.message, db)
+@limiter.limit("100/minute")
+def chat(request: Request, body: ChatRequest, db: Session = Depends(get_db)):
+    retrieved = retrieve_relevant_chunks(body.message, db)
     print(f"[chat] retrieved {len(retrieved)} chunks, "
           f"distances={[round(r['distance'], 3) for r in retrieved]}")
 
@@ -38,7 +40,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     else:
         escalate = True
 
-    messages = build_rag_messages(request.message, [r["text"] for r in retrieved])
+    messages = build_rag_messages(body.message, [r["text"] for r in retrieved])
 
     provider = get_llm_provider()
     reply = provider.chat_completion(messages)

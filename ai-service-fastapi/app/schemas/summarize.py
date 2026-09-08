@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SummarizeRequest(BaseModel):
-    text: str
+    text: str = Field(min_length=1, max_length=20_000)
 
 
 class SummarizeResponse(BaseModel):

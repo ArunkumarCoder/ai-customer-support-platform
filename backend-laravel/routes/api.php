@@ -14,15 +14,15 @@ Route::get('/user', function (Request $request) {
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::apiResource('tickets', TicketController::class);
     Route::post('/tickets/{ticket}/messages', [MessageController::class, 'store']);
 });
 
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'admin', 'throttle:60,1'])->group(function () {
     Route::post('/documents', [DocumentController::class, 'store']);
 });
 
-Route::post('/chat', [ChatController::class, 'store']);
+Route::post('/chat', [ChatController::class, 'store'])->middleware('throttle:10,1');

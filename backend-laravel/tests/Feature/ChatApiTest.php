@@ -97,6 +97,33 @@ class ChatApiTest extends TestCase
         $this->assertSame('escalated', $ticket->status);
     }
 
+    public function test_chat_request_missing_required_fields_returns_422(): void
+    {
+        Http::fake();
+
+        $response = $this->postJson('/api/chat', []);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['message', 'visitor_id']);
+    }
+
+    public function test_chat_endpoint_is_rate_limited_after_exceeding_ten_requests_per_minute(): void
+    {
+        $this->fakeChatAndSentiment('Sure, happy to help.', false);
+
+        for ($i = 0; $i < 10; $i++) {
+            $this->postJson('/api/chat', [
+                'message' => "Message {$i}",
+                'visitor_id' => 'visitor-throttle-1',
+            ])->assertStatus(200);
+        }
+
+        $this->postJson('/api/chat', [
+            'message' => 'One too many',
+            'visitor_id' => 'visitor-throttle-1',
+        ])->assertStatus(429);
+    }
+
     public function test_ai_service_connection_failure_falls_back_gracefully_and_escalates(): void
     {
         Http::fake([

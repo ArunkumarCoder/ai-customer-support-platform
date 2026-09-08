@@ -51,6 +51,17 @@ class AuthApiTest extends TestCase
         $response->assertJsonMissingPath('token');
     }
 
+    public function test_login_with_invalid_email_format_returns_422(): void
+    {
+        $response = $this->postJson('/api/login', [
+            'email' => 'not-an-email',
+            'password' => 'whatever',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['email']);
+    }
+
     public function test_logout_invalidates_the_token(): void
     {
         $agent = $this->makeAgent();

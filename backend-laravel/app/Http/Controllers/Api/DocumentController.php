@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Document; 
+use App\Http\Requests\Api\StoreDocumentRequest;
+use App\Models\Document;
 use App\Jobs\IngestDocumentJob;
 
 class DocumentController extends Controller
@@ -20,12 +20,9 @@ class DocumentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreDocumentRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'file' => 'required|file|mimes:txt,md|max:5120',
-        ]);
+        $validated = $request->validated();
 
         $path = $request->file('file')->store('documents');
 
