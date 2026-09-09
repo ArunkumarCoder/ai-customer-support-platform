@@ -14,6 +14,17 @@ class AnalyzeSentimentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * Number of times the job may be attempted before landing in failed_jobs.
+     */
+    public $tries = 3;
+
+    /**
+     * Max seconds a single attempt may run — comfortably above
+     * AiServiceClient::sentiment()'s 15s HTTP timeout.
+     */
+    public $timeout = 30;
+
     public function __construct(public Message $message)
     {
     }

@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -7,8 +9,18 @@ from app.api.ingest import router as ingest_router
 from app.api.sentiment import router as sentiment_router
 from app.api.summarize import router as summarize_router
 from app.core.rate_limit import limiter
+from app.services.embeddings import get_embedding_model
 
-app = FastAPI(title="AI Customer Support - AI Service")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Warm the sentence-transformers model once at startup instead of paying
+    # the ~7s load cost on whichever request happens to hit it first.
+    get_embedding_model()
+    yield
+
+
+app = FastAPI(title="AI Customer Support - AI Service", lifespan=lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
