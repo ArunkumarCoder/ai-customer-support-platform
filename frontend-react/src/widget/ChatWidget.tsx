@@ -57,6 +57,9 @@ export default function ChatWidget() {
       <div className="chat-widget-header">Support Chat</div>
 
       <div className="chat-widget-messages">
+        {messages.length === 0 && (
+          <div className="empty-state">Ask a question to get started.</div>
+        )}
         {messages.map((message) => (
           <div
             key={message.id}
