@@ -7,6 +7,7 @@ export interface Ticket {
   priority: string
   sentiment_summary: string | null
   summary: string | null
+  assigned_agent_id: number | null
   created_at: string
 }
 
