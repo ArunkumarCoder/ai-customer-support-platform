@@ -1,0 +1,20 @@
+vendor/
+node_modules/
+.env
+.env.local
+.env.*.local
+tests/
+.git/
+.gitignore
+*.md
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+!storage/framework/cache/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/views/.gitignore
+# Locally-generated package/service discovery cache — regenerated fresh in
+# the image (see Dockerfile) against the --no-dev vendor/, not copied from
+# a local dev environment that has dev-only packages like laravel/pail.
+bootstrap/cache/*.php
