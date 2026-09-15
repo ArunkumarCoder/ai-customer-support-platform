@@ -1540,6 +1540,14 @@ table a:hover {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: 0 20px 48px rgba(31, 58, 95, 0.2);
+}
+
+/* Scoped to [open] deliberately: an unconditional "display: flex" here
+   would (and did) override the browser's own "dialog:not([open]) {
+   display: none }" default — author-origin CSS always wins over the
+   user-agent stylesheet regardless of specificity, so the dialog stayed
+   visible in normal page flow even when closed. */
+.doc-viewer[open] {
   display: flex;
   flex-direction: column;
 }
