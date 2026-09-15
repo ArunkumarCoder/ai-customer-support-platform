@@ -10,7 +10,7 @@ An enterprise-style AI-powered customer support platform combining a Laravel bac
 
 - **Backend (business logic):** Laravel 12, PHP 8.2+, Sanctum for auth, Redis-backed queues
 - **AI microservice:** FastAPI, Python 3.11+, SQLAlchemy + Alembic (migrations), pgvector, psycopg2, sentence-transformers
-- **Frontend:** React 18 + Vite + TypeScript, axios, react-router
+- **Frontend:** React 19 + Vite 8 + TypeScript, axios, react-router-dom
 - **Database:** PostgreSQL 15+ with the `pgvector` extension enabled
 - **Queue/cache:** Redis
 - **AI provider:** chat is pluggable via a strategy pattern in `app/services/llm/` (`base.py` + one module per provider + `factory.py`), selected at runtime by the `LLM_PROVIDER` env var — currently supports `openai`, `anthropic`, and `groq` (Groq's free tier is the default for local dev, since OpenAI/Anthropic both require paid credits). Embeddings use a local `sentence-transformers` model (`all-MiniLM-L6-v2`, 384-dim) via `app/services/embeddings.py` — no per-request API cost, same model for ingestion and query-time retrieval.
@@ -97,7 +97,7 @@ ai-customer-support-platform/
 - `agents` — support agents/admins, role field (agent/admin)
 - `tickets` — id, user_id (nullable), visitor_id (nullable, indexed — anonymous widget visitors or, for email-originated tickets, the sender's email address), status, priority, sentiment_summary, assigned_agent_id, summary (nullable, AI-generated gist for email-originated tickets), timestamps
 - `messages` — id, ticket_id, sender (customer/bot/agent), body, sentiment_label, sentiment_score, timestamps
-- `documents` — id, title, source_file, uploaded_by, timestamps
+- `documents` — id, title, source_file, content (nullable, full text — durable copy, since the local disk `source_file` points at isn't durable on a free-tier host), uploaded_by, timestamps
 - `document_chunks` — id, document_id, chunk_text, embedding (vector), timestamps
 
 ## Environment & Service Communication
