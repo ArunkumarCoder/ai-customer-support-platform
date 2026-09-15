@@ -1,0 +1,99 @@
+<svg viewBox="0 0 980 1080" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e6fba"/>
+    </marker>
+    <marker id="arrow2-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b33a3a"/>
+    </marker>
+    <marker id="arrow2-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e8b57"/>
+    </marker>
+  </defs>
+
+  <rect width="980" height="1080" fill="#f7f8fa"/>
+  <text x="490" y="32" text-anchor="middle" font-size="18" font-weight="700" fill="#1f3a5f">Chat / RAG Request Flow</text>
+
+  <!-- Lane labels -->
+  <text x="150" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#5a6472">REACT</text>
+  <text x="490" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#5a6472">LARAVEL</text>
+  <text x="830" y="66" text-anchor="middle" font-size="11" font-weight="700" fill="#5a6472">FASTAPI</text>
+  <line x1="320" y1="50" x2="320" y2="1050" stroke="#e1e4e8" stroke-dasharray="4,4"/>
+  <line x1="660" y1="50" x2="660" y2="1050" stroke="#e1e4e8" stroke-dasharray="4,4"/>
+
+  <!-- Step 1: visitor types -->
+  <rect x="40" y="84" width="220" height="60" rx="8" fill="#eaf1fb" stroke="#2e6fba" stroke-width="1.5"/>
+  <text x="150" y="108" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1f3a5f">1. Visitor types a message</text>
+  <text x="150" y="125" text-anchor="middle" font-size="9.5" fill="#5a6472">visitor_id from localStorage</text>
+
+  <path d="M150,144 L150,175 L340,175" fill="none" stroke="#2e6fba" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  <text x="200" y="168" font-size="9.5" fill="#5a6472">POST /api/chat</text>
+
+  <!-- Step 2: laravel finds/creates ticket -->
+  <rect x="340" y="184" width="300" height="60" rx="8" fill="#1f3a5f"/>
+  <text x="490" y="208" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">2. Find open ticket for visitor_id,</text>
+  <text x="490" y="225" text-anchor="middle" font-size="9.5" fill="#cfe0f5">or create one · log customer message</text>
+
+  <path d="M490,244 L490,275" fill="none" stroke="#1f3a5f" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <!-- Step 3: dispatch sentiment job -->
+  <rect x="340" y="284" width="300" height="55" rx="8" fill="#ffffff" stroke="#b33a3a" stroke-width="1.5"/>
+  <text x="490" y="307" text-anchor="middle" font-size="11" font-weight="700" fill="#1f3a5f">3. Dispatch AnalyzeSentimentJob</text>
+  <text x="490" y="324" text-anchor="middle" font-size="9.5" fill="#5a6472">(queued — doesn't block this request)</text>
+
+  <path d="M640,300 L820,300" fill="none" stroke="#2e6fba" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  <text x="660" y="293" font-size="9.5" fill="#5a6472">POST /chat</text>
+  <text x="660" y="316" font-size="8.5" fill="#8a94a3">X-Internal-Api-Key</text>
+
+  <!-- Step 4: FastAPI embeds -->
+  <rect x="720" y="350" width="220" height="55" rx="8" fill="#eaf1fb" stroke="#2e6fba" stroke-width="1.5"/>
+  <text x="830" y="373" text-anchor="middle" font-size="11" font-weight="700" fill="#1f3a5f">4. Embed the query</text>
+  <text x="830" y="390" text-anchor="middle" font-size="9.5" fill="#5a6472">sentence-transformers, 384-dim</text>
+
+  <path d="M830,405 L830,436" fill="none" stroke="#2e6fba" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <!-- Step 5: pgvector search -->
+  <rect x="720" y="445" width="220" height="60" rx="8" fill="#eaf1fb" stroke="#2e6fba" stroke-width="1.5"/>
+  <text x="830" y="468" text-anchor="middle" font-size="11" font-weight="700" fill="#1f3a5f">5. pgvector similarity search</text>
+  <text x="830" y="485" text-anchor="middle" font-size="9.5" fill="#5a6472">cosine distance over document_chunks</text>
+
+  <path d="M830,505 L830,536" fill="none" stroke="#2e6fba" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <!-- Step 6: build prompt + call LLM -->
+  <rect x="720" y="545" width="220" height="60" rx="8" fill="#eaf1fb" stroke="#2e6fba" stroke-width="1.5"/>
+  <text x="830" y="568" text-anchor="middle" font-size="11" font-weight="700" fill="#1f3a5f">6. Build RAG prompt,</text>
+  <text x="830" y="585" text-anchor="middle" font-size="9.5" fill="#5a6472">call configured LLM provider</text>
+
+  <path d="M830,605 L830,636" fill="none" stroke="#2e6fba" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <!-- Step 7: confidence check -->
+  <rect x="710" y="645" width="240" height="70" rx="8" fill="#fdf6e3" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="830" y="668" text-anchor="middle" font-size="11" font-weight="700" fill="#1f3a5f">7. Confidence check</text>
+  <text x="830" y="685" text-anchor="middle" font-size="9.5" fill="#5a6472">no chunks, or min distance &gt;</text>
+  <text x="830" y="700" text-anchor="middle" font-size="9.5" fill="#5a6472">CONFIDENCE_DISTANCE_THRESHOLD (0.65)</text>
+
+  <path d="M820,715 L490,760" fill="none" stroke="#2e6fba" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  <text x="660" y="748" font-size="9.5" fill="#5a6472">{reply, escalate}</text>
+
+  <!-- Step 8: laravel stores bot reply -->
+  <rect x="340" y="770" width="300" height="65" rx="8" fill="#1f3a5f"/>
+  <text x="490" y="793" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">8. Store bot reply as a message</text>
+  <text x="490" y="810" text-anchor="middle" font-size="9.5" fill="#cfe0f5">escalate:true → ticket.status = 'escalated'</text>
+  <text x="490" y="825" text-anchor="middle" font-size="9" fill="#9db6d8">(unreachable FastAPI also forces escalate:true)</text>
+
+  <path d="M340,802 L150,860" fill="none" stroke="#2e6fba" stroke-width="1.5" marker-end="url(#arrow2)"/>
+  <text x="180" y="845" font-size="9.5" fill="#5a6472">{reply, ticket_id, escalated}</text>
+
+  <!-- Step 9: React shows reply -->
+  <rect x="40" y="870" width="240" height="65" rx="8" fill="#eaf1fb" stroke="#2e6fba" stroke-width="1.5"/>
+  <text x="160" y="893" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1f3a5f">9. Show reply in the widget</text>
+  <text x="160" y="910" text-anchor="middle" font-size="9.5" fill="#5a6472">escalated → human-handoff notice</text>
+
+  <!-- fallback branch -->
+  <rect x="340" y="950" width="300" height="70" rx="8" fill="#fbecec" stroke="#b33a3a" stroke-width="1.5"/>
+  <text x="490" y="973" text-anchor="middle" font-size="11" font-weight="700" fill="#1f3a5f">Fail-safe fallback</text>
+  <text x="490" y="990" text-anchor="middle" font-size="9.5" fill="#5a6472">FastAPI unreachable or non-2xx →</text>
+  <text x="490" y="1005" text-anchor="middle" font-size="9.5" fill="#5a6472">generic apology reply, escalate forced true</text>
+
+  <path d="M640,320 C 700,400 700,900 640,975" fill="none" stroke="#b33a3a" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arrow2-red)"/>
+</svg>

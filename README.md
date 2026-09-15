@@ -1,43 +1,30 @@
 # AI Customer Support Platform
 
+![Laravel 12](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![PostgreSQL + pgvector](https://img.shields.io/badge/PostgreSQL-pgvector-336791?logo=postgresql&logoColor=white)
+
 An enterprise-style AI-powered customer support platform combining a **Laravel** backend for business logic and ticketing, a **FastAPI** microservice for AI/RAG operations, and a **React** frontend for both the customer chat widget and the admin dashboard — backed by a shared **PostgreSQL** database (with `pgvector`) and a pluggable LLM layer (**OpenAI**, **Anthropic**, or **Groq**).
 
 Built as a portfolio piece to demonstrate polyglot microservice architecture, applied AI (RAG, sentiment analysis, summarization), clean API design, and enterprise development practices (auth, async queues, testing, deployment).
 
-> 🚧 **Status: Week 3 complete — Admin dashboard.** Full chat flow is wired end-to-end: the React widget talks to Laravel, which tracks anonymous visitors as tickets and forwards messages to FastAPI's RAG pipeline (pgvector retrieval + the configured LLM provider). Low-confidence answers automatically escalate the ticket for human follow-up. Agents authenticate through a real React login page backed by Sanctum tokens, see a role-filtered, filterable ticket list (non-admins only see unassigned/their own tickets), open a ticket to read the full conversation, reply (which un-escalates it to `in_progress` and auto-assigns it), and mark it resolved. Document upload is admin-only. See [Current Progress](#current-progress) below.
+## Live demo
 
-## Architecture
+**https://ai-customer-support-platform-mu.vercel.app/**
 
-```
-┌──────────────┐        ┌──────────────────┐        ┌────────────────────┐
-│ React (5173) │──────▶ │ Laravel (8000)   │──────▶ │ FastAPI (8001)     │
-│ widget + admin│  API   │ auth, tickets,   │ HTTP + │ chat, ingest,      │
-│ dashboard     │        │ queues, orchestr.│ shared │ sentiment, summarize│
-└──────────────┘        └──────────────────┘  secret └────────────────────┘
-                                  │                            │
-                                  ▼                            ▼
-                          ┌───────────────┐          ┌──────────────────┐
-                          │ PostgreSQL    │◀─────────│ pgvector          │
-                          │ users, agents,│          │ document_chunks   │
-                          │ tickets,      │          └──────────────────┘
-                          │ messages      │
-                          └───────────────┘
-                                  ▲
-                                  │
-                          ┌───────────────┐
-                          │ Redis (queues)│
-                          └───────────────┘
-```
+The homepage and chat widget are open to anyone — try asking about order tracking, returns, refunds, shipping, or payment methods. The agent dashboard (`/login`) is gated behind a seeded admin account; see the maintainer for demo credentials rather than a public login being listed here.
 
-**Non-negotiable rules:**
+> Both backend services run on a free-tier host that spins down after 15 minutes of inactivity — the first request after a while (a chat message, or a dashboard login) can take 15–30+ seconds while it wakes back up. Everything after that is fast.
 
-1. React talks only to Laravel — never directly to FastAPI.
-2. Laravel talks to FastAPI only for AI work (chat, ingest, sentiment, summarize); Laravel owns auth, tickets, and orchestration.
-3. Laravel → FastAPI requests are authenticated with a shared-secret header (`X-Internal-Api-Key`), verified in FastAPI's `core/security.py`.
-4. One Postgres instance, two schema owners: Laravel's Eloquent migrations own `users` / `agents` / `tickets` / `messages`; FastAPI's SQLAlchemy models own the vector table `document_chunks`.
-5. Anything slow or non-interactive (email polling, summarization, sentiment scoring, document ingestion) runs through a Laravel queue job, never inline on a request.
+## Features
 
-See [CLAUDE.md](CLAUDE.md) for the full architecture rules, data flows, and schema, and [docs/architecture.md](docs/architecture.md) for diagrams.
+- **RAG-grounded chat** — every reply is built from chunks of real, ingested documents (pgvector cosine-similarity retrieval), not the model improvising.
+- **Confidence-based escalation** — when retrieval finds nothing relevant, or the best match is still too weak, the ticket is automatically flagged for a human agent instead of guessing.
+- **Multi-provider LLM support** — OpenAI, Anthropic, or Groq, swapped with one environment variable (`LLM_PROVIDER`) via a strategy pattern; no code changes to switch.
+- **Sentiment-aware triage** — every customer message is scored, and each ticket rolls up to its worst-case sentiment so frustrated customers surface first in the queue.
+- **Email-to-ticket automation** — a support inbox is polled on a schedule; new emails become tickets with an AI-generated summary attached.
+- **Admin dashboard** — a real-time ticket queue with status/priority/sentiment filters, a full reply/resolve flow, role-based visibility (non-admin agents only see unassigned or their own tickets), and a Documents page for managing the chatbot's knowledge base (upload, list, and view ingested content).
 
 ## Tech Stack
 
@@ -45,29 +32,45 @@ See [CLAUDE.md](CLAUDE.md) for the full architecture rules, data flows, and sche
 |---|---|
 | Backend (business logic) | Laravel 12, PHP 8.2+, Sanctum, Redis-backed queues |
 | AI microservice | FastAPI, Python 3.11+, SQLAlchemy + Alembic, pgvector, psycopg2, sentence-transformers |
-| Frontend | React 18 + Vite + TypeScript, axios, react-router |
-| Database | PostgreSQL 15+ with the `pgvector` extension |
-| Queue / cache | Redis |
+| Frontend | React 19 + Vite 8 + TypeScript, axios, react-router-dom — no UI library, hand-rolled design system |
+| Database | PostgreSQL 16 (`pgvector/pgvector:pg16` locally, [Neon](https://neon.tech) in production) with the `pgvector` extension |
+| Queue / cache | Redis (local dev; production runs jobs synchronously instead — see [docs/architecture.md](docs/architecture.md)) |
 | AI provider | Pluggable via `LLM_PROVIDER` — OpenAI, Anthropic, or Groq (strategy pattern in `app/services/llm/`); Groq's free tier is the default for local dev. Embeddings via local `sentence-transformers` (`all-MiniLM-L6-v2`) |
+
+## Architecture
+
+React talks only to Laravel; Laravel is the only caller of FastAPI, authenticated with a shared-secret header. One Postgres instance, two schema owners. Full write-up, diagrams, and the exact request/response flow for a chat message: **[docs/architecture.md](docs/architecture.md)**.
+
+![System architecture](docs/architecture/system-architecture.svg)
+
+## API Reference
+
+Generated from the actual routes and Pydantic/FormRequest schemas, not written ahead of the code:
+
+- **[Laravel API](docs/api-spec/laravel-api.md)** — auth, tickets, messages, documents, chat
+- **[FastAPI service](docs/api-spec/fastapi-service.md)** — chat, ingest, sentiment, summarize, health
 
 ## Repository Structure
 
 ```
 ai-customer-support-platform/
-├── CLAUDE.md                 # architecture rules, data flows, schema, progress tracker
+├── CLAUDE.md                 # full architecture rules, data flows, schema, session-by-session progress log
 ├── docker-compose.yml        # local Postgres (pgvector) + Redis
-├── docs/                     # architecture notes, API spec, ER diagram
+├── docs/
+│   ├── architecture.md       # written architecture overview
+│   ├── architecture/         # system + RAG-flow diagrams (SVG)
+│   └── api-spec/             # Laravel + FastAPI endpoint reference
 ├── backend-laravel/          # auth, tickets, orchestration, queue jobs
 ├── ai-service-fastapi/       # chat/RAG, ingest, sentiment, summarize endpoints
 ├── frontend-react/           # chat widget + admin dashboard
-└── scripts/setup.sh          # local environment bootstrap
+└── scripts/setup.sh          # placeholder — not currently used; follow "Local Setup" below
 ```
 
 ## Prerequisites
 
 - PHP 8.2+, Composer
 - Python 3.11+
-- Node.js 18+
+- Node.js `^20.19.0` or `>=22.12.0` (required by Vite 8 — plain "Node 18" is not enough)
 - Docker (for Postgres + Redis via `docker-compose.yml`)
 - An API key for at least one supported LLM provider (OpenAI, Anthropic, or Groq — Groq offers a free tier, easiest for local dev)
 
@@ -95,7 +98,7 @@ php artisan key:generate
 php artisan migrate
 php artisan db:seed --class=AgentSeeder   # creates admin@example.com / password for /login
 php artisan serve       # http://localhost:8000
-php artisan queue:work  # in a separate terminal
+php artisan queue:work  # in a separate terminal — required for sentiment/ingest jobs to actually run locally
 ```
 
 **4. FastAPI AI service:**
@@ -104,7 +107,8 @@ php artisan queue:work  # in a separate terminal
 cd ai-service-fastapi
 python -m venv venv && source venv/bin/activate   # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
-cp .env.example .env   # set LLM_PROVIDER (openai|anthropic|groq) + that provider's API key/model, INTERNAL_API_KEY (must match Laravel's AI_SERVICE_SECRET)
+cp .env.example .env   # set LLM_PROVIDER (openai|anthropic|groq) + that provider's API key/model, INTERNAL_API_KEY (must match Laravel's AI_SERVICE_SECRET), DATABASE_URL
+alembic upgrade head    # creates document_chunks + its HNSW index
 uvicorn app.main:app --reload --port 8001
 ```
 
@@ -113,37 +117,42 @@ uvicorn app.main:app --reload --port 8001
 ```bash
 cd frontend-react
 npm install
-cp .env.example .env   # set VITE_API_BASE_URL to the Laravel URL, e.g. http://localhost:8000/api
+cp .env.example .env   # set VITE_API_BASE_URL, e.g. http://localhost:8000/api
 npm run dev             # http://localhost:5173
 ```
+
+Log into the dashboard at `http://localhost:5173/login` with `admin@example.com` / `password` (the seeded local dev account — never used in production).
 
 ## Testing
 
 ```bash
-# Laravel
+# Laravel (39 tests)
 cd backend-laravel && php artisan test
 
-# FastAPI
+# FastAPI (26 tests)
 cd ai-service-fastapi && pytest
+
+# Frontend — type-check + production build (clean), then lint
+cd frontend-react && npm run build && npm run lint
 ```
 
-## Current Progress
+`npm run lint` currently exits non-zero — 3 pre-existing `react-hooks/set-state-in-effect` errors in `TicketListPage.tsx`/`TicketDetailPage.tsx`, left as-is rather than fixed as a drive-by change unrelated to whatever session touched those files last. `npm run build` (which is what CI/deploys actually depend on) is clean.
 
-- [x] FastAPI `/chat` endpoint wired to a pluggable LLM provider (OpenAI/Anthropic/Groq)
-- [x] End-to-end smoke test across all three services
-- [x] `tickets`/`messages` schema, document upload + async ingestion pipeline (pgvector + `sentence-transformers`), RAG retrieval, full chatbot flow
-- [x] Confidence-based auto-escalation: low-similarity retrieval, no matching documents, or an unreachable AI service all flag a ticket `escalated`
-- [x] React chat widget tracking anonymous visitors, showing a human-handoff notice on escalation
-- [x] Real agent authentication (`POST /login`, `POST /logout`, `GET /me` via Sanctum tokens against the `agents` table, seeded via `AgentSeeder`)
-- [x] React login page + protected ticket list dashboard (`AuthContext`, `ProtectedRoute`, real `GET /tickets` data)
-- [x] Ticket detail view + agent reply flow: full conversation thread, reply (flips `escalated` → `in_progress`, auto-assigns the ticket), mark resolved
-- [x] Role-based ticket visibility (non-admins see only unassigned/own tickets), admin-only document upload, status/priority/sentiment filter dropdowns
-- [ ] Sentiment + email summarization endpoints and queue jobs
-- [ ] Testing/hardening pass, rate limiting, latency checks
-- [ ] Deployment of all services + demo
+## Deployment
 
-Full roadmap and week-by-week breakdown live in [CLAUDE.md](CLAUDE.md#current-progress).
+All three services are live (see [Live demo](#live-demo) above):
+
+- **React** → Vercel, deployed from this repo's `frontend-react/` directory, `VITE_API_BASE_URL` pointing at the live Laravel API.
+- **Laravel** → Render, as a Docker web service (see `backend-laravel/Dockerfile`), against a managed Postgres instance.
+- **FastAPI** → Render, also Docker, same Postgres instance (pgvector-enabled), CPU-only PyTorch build to keep the image size reasonable on a free tier.
+- **Postgres** → [Neon](https://neon.tech), the one database both backend services share.
+
+Production deliberately differs from local dev in two ways, both driven by staying on genuinely free infrastructure end-to-end: queued jobs run synchronously (`QUEUE_CONNECTION=sync`) rather than through a Redis-backed worker, since Render's free tier has no background-worker option; and document uploads are currently gated behind a reversible kill-switch (`DOCUMENT_UPLOADS_ENABLED`) at both the frontend and the API level. Full reasoning for both in [CLAUDE.md](CLAUDE.md).
 
 ## License
 
-Portfolio project — no license specified yet.
+No license has been chosen yet for this repository.
+
+---
+
+For the complete architecture rules, every data flow, the full database schema, and a detailed session-by-session build log (what was built, what deviated from plan, and why), see **[CLAUDE.md](CLAUDE.md)**.
