@@ -38,11 +38,20 @@ class DocumentController extends Controller
 
         $validated = $request->validated();
 
-        $path = $request->file('file')->store('documents');
+        $file = $request->file('file');
+        // Read before store() moves/copies it — safer than relying on the
+        // temp upload still being readable afterward.
+        $content = $file->get();
+        $path = $file->store('documents');
 
         $document = Document::create([
             'title' => $validated['title'],
             'source_file' => $path,
+            // Also persisted here, not just on disk — the local disk isn't
+            // durable on a free-tier host (wiped on every redeploy), but
+            // these are always small plain-text files, so a DB column is a
+            // simple, fully durable place to keep it for the View feature.
+            'content' => $content,
             'uploaded_by' => $request->user()->id,
         ]);
 
@@ -60,12 +69,21 @@ class DocumentController extends Controller
     {
         $document->load('uploader');
 
-        // Checked explicitly rather than catching a "file not found" exception
-        // from get() — Storage::fake()'s test double doesn't throw the same
-        // way the real local disk does, so exists()-first is both simpler
-        // and consistent across environments.
-        $contentAvailable = Storage::disk('local')->exists($document->source_file);
-        $content = $contentAvailable ? Storage::disk('local')->get($document->source_file) : null;
+        // The DB column is authoritative going forward (see store()) — the
+        // disk fallback only matters for rows uploaded before that column
+        // existed, and only if the free-tier host's ephemeral disk happens
+        // not to have been wiped by a redeploy yet. Checked explicitly
+        // rather than catching a "file not found" exception from get() —
+        // Storage::fake()'s test double doesn't throw the same way the
+        // real local disk does, so exists()-first is both simpler and
+        // consistent across environments.
+        $content = $document->content;
+        $contentAvailable = $content !== null;
+
+        if (! $contentAvailable && Storage::disk('local')->exists($document->source_file)) {
+            $content = Storage::disk('local')->get($document->source_file);
+            $contentAvailable = true;
+        }
 
         return response()->json(array_merge($document->toArray(), [
             'content' => $content,

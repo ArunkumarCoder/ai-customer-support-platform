@@ -140,6 +140,7 @@ class DocumentApiTest extends TestCase
         Document::create([
             'title' => 'Refund Policy',
             'source_file' => 'documents/refund.txt',
+            'content' => 'Refunds are issued within 5-7 business days.',
             'uploaded_by' => $admin->id,
         ]);
 
@@ -148,6 +149,9 @@ class DocumentApiTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonFragment(['title' => 'Refund Policy']);
         $response->assertJsonPath('0.uploader.email', $admin->email);
+        // content is deliberately hidden from the listing (see Document::$hidden)
+        // — a table of many documents shouldn't ship every one's full text.
+        $response->assertJsonMissingPath('0.content');
     }
 
     public function test_non_admin_agent_is_forbidden_from_listing_documents(): void
@@ -205,6 +209,49 @@ class DocumentApiTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonPath('content_available', false);
         $response->assertJsonPath('content', null);
+    }
+
+    public function test_uploaded_document_content_is_persisted_to_database(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+        Http::fake();
+
+        $admin = $this->makeAgent('admin');
+        $file = UploadedFile::fake()->createWithContent('policy.txt', 'Refunds are issued within 5-7 business days.');
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/documents', [
+            'title' => 'Refund Policy',
+            'file' => $file,
+        ])->assertStatus(201);
+
+        $this->assertDatabaseHas('documents', [
+            'title' => 'Refund Policy',
+            'content' => 'Refunds are issued within 5-7 business days.',
+        ]);
+    }
+
+    public function test_document_view_works_even_when_disk_file_is_missing(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->makeAgent('admin');
+
+        // Simulates the real-world case this column exists to fix: the
+        // free-tier host's disk was wiped by a redeploy after upload, so
+        // no file exists at source_file — content only lives in the DB.
+        $document = Document::create([
+            'title' => 'Refund Policy',
+            'source_file' => 'documents/refund.txt',
+            'content' => 'Refunds are issued within 5-7 business days.',
+            'uploaded_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson("/api/documents/{$document->id}");
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('content_available', true);
+        $response->assertJsonPath('content', 'Refunds are issued within 5-7 business days.');
     }
 
     public function test_viewing_nonexistent_document_returns_404(): void
