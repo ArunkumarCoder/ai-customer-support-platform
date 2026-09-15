@@ -213,7 +213,7 @@ export default function HomePage() {
             </p>
             <ul className="home-demo__hints">
               <li>
-                Try: <strong>&ldquo;What are your support hours?&rdquo;</strong>
+                Try: <strong>&ldquo;How do I track my order?&rdquo;</strong>
               </li>
               <li>
                 Try: <strong>&ldquo;How do I get a refund?&rdquo;</strong> to see an escalation
