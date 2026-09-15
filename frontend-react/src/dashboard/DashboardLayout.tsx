@@ -5,6 +5,7 @@ import { fetchTickets } from '../api/ticketsApi'
 import {
   BellIcon,
   ChevronDownIcon,
+  ExternalLinkIcon,
   FileTextIcon,
   LogoutIcon,
   MenuIcon,
@@ -174,6 +175,10 @@ export default function DashboardLayout() {
                     <strong>{agent?.name}</strong>
                     <span>{agent?.email}</span>
                   </div>
+                  <Link to="/">
+                    <ExternalLinkIcon />
+                    Back to website
+                  </Link>
                   <button type="button" onClick={() => void handleLogout()}>
                     <LogoutIcon />
                     Log out

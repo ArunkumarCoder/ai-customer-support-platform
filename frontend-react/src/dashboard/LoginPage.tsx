@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { LockIcon, MailIcon } from './icons'
+import { ArrowLeftIcon, LockIcon, MailIcon } from './icons'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -67,6 +67,10 @@ export default function LoginPage() {
             {submitting ? 'Logging in...' : 'Log in'}
           </button>
         </form>
+
+        <Link to="/" className="login-box__back-link">
+          <ArrowLeftIcon width={16} height={16} /> Back to website
+        </Link>
       </div>
     </div>
   )
