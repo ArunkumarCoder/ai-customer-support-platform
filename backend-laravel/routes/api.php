@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'admin', 'throttle:60,1'])->group(function () {
+    Route::get('/documents', [DocumentController::class, 'index']);
     Route::post('/documents', [DocumentController::class, 'store']);
 });
 

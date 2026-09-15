@@ -6,6 +6,7 @@ import LoginPage from './dashboard/LoginPage'
 import DashboardLayout from './dashboard/DashboardLayout'
 import TicketListPage from './dashboard/TicketListPage'
 import TicketDetailPage from './dashboard/TicketDetailPage'
+import DocumentsPage from './dashboard/DocumentsPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<TicketListPage />} />
               <Route path="/dashboard/tickets/:id" element={<TicketDetailPage />} />
+              <Route path="/dashboard/documents" element={<DocumentsPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

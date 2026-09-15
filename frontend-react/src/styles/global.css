@@ -752,6 +752,12 @@ table a:hover {
   padding: 18px;
 }
 
+.card-hint {
+  margin: 0 0 14px;
+  color: var(--gray-text);
+  font-size: 13px;
+}
+
 .card-body table {
   border: none;
 }
@@ -825,6 +831,10 @@ table a:hover {
   color: var(--gray-text);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.filters > button {
+  align-self: flex-end;
 }
 
 /* --- Badges --- */

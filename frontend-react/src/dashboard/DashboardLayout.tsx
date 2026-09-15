@@ -5,6 +5,7 @@ import { fetchTickets } from '../api/ticketsApi'
 import {
   BellIcon,
   ChevronDownIcon,
+  FileTextIcon,
   LogoutIcon,
   MenuIcon,
   SearchIcon,
@@ -73,6 +74,7 @@ export default function DashboardLayout() {
   }
 
   const ticketDetailMatch = location.pathname.match(TICKET_DETAIL_PATTERN)
+  const isDocumentsPage = location.pathname === '/dashboard/documents'
   const isSidebarMini = isDesktop && !sidebarOpen
 
   return (
@@ -98,6 +100,18 @@ export default function DashboardLayout() {
             <TicketIcon className="app-sidebar__link-icon" />
             <span className="app-sidebar__link-label">Tickets</span>
           </NavLink>
+
+          {agent?.role === 'admin' && (
+            <NavLink
+              to="/dashboard/documents"
+              className={({ isActive }) =>
+                `app-sidebar__link${isActive ? ' is-active' : ''}`
+              }
+            >
+              <FileTextIcon className="app-sidebar__link-icon" />
+              <span className="app-sidebar__link-label">Documents</span>
+            </NavLink>
+          )}
         </nav>
       </aside>
 
@@ -173,11 +187,17 @@ export default function DashboardLayout() {
         <div className="app-breadcrumb">
           <span>Dashboard</span>
           <span className="app-breadcrumb__sep">/</span>
-          <span className={ticketDetailMatch ? '' : 'app-breadcrumb__current'}>Tickets</span>
-          {ticketDetailMatch && (
+          {isDocumentsPage ? (
+            <span className="app-breadcrumb__current">Documents</span>
+          ) : (
             <>
-              <span className="app-breadcrumb__sep">/</span>
-              <span className="app-breadcrumb__current">Ticket #{ticketDetailMatch[1]}</span>
+              <span className={ticketDetailMatch ? '' : 'app-breadcrumb__current'}>Tickets</span>
+              {ticketDetailMatch && (
+                <>
+                  <span className="app-breadcrumb__sep">/</span>
+                  <span className="app-breadcrumb__current">Ticket #{ticketDetailMatch[1]}</span>
+                </>
+              )}
             </>
           )}
         </div>

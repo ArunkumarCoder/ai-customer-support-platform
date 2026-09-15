@@ -132,4 +132,37 @@ class DocumentApiTest extends TestCase
         Queue::assertNothingPushed();
         $this->assertDatabaseCount('documents', 0);
     }
+
+    public function test_admin_can_list_documents_with_uploader_included(): void
+    {
+        $admin = $this->makeAgent('admin');
+
+        Document::create([
+            'title' => 'Refund Policy',
+            'source_file' => 'documents/refund.txt',
+            'uploaded_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/documents');
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment(['title' => 'Refund Policy']);
+        $response->assertJsonPath('0.uploader.email', $admin->email);
+    }
+
+    public function test_non_admin_agent_is_forbidden_from_listing_documents(): void
+    {
+        $agent = $this->makeAgent('agent');
+
+        $response = $this->actingAs($agent, 'sanctum')->getJson('/api/documents');
+
+        $response->assertStatus(403);
+    }
+
+    public function test_unauthenticated_request_to_list_documents_returns_401(): void
+    {
+        $response = $this->getJson('/api/documents');
+
+        $response->assertStatus(401);
+    }
 }

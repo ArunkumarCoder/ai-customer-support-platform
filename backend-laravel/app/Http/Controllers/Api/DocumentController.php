@@ -14,7 +14,7 @@ class DocumentController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(Document::with('uploader')->latest()->get());
     }
 
     /**
