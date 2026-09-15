@@ -15,7 +15,7 @@ class AiServiceClient
           $response = Http::withHeaders([
                   'X-Internal-Api-Key' => config('services.ai.secret'),
               ])
-              ->timeout(15)
+              ->timeout(45)
               ->post(config('services.ai.url') . '/chat', [
                   'message' => $message,
               ]);
