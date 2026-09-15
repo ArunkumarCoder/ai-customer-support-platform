@@ -31,8 +31,6 @@ class ChatResponse(BaseModel):
 @limiter.limit("100/minute")
 def chat(request: Request, body: ChatRequest, db: Session = Depends(get_db)):
     retrieved = retrieve_relevant_chunks(body.message, db)
-    print(f"[chat] retrieved {len(retrieved)} chunks, "
-          f"distances={[round(r['distance'], 3) for r in retrieved]}")
 
     if retrieved:
         min_distance = min(r["distance"] for r in retrieved)

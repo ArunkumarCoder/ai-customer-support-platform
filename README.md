@@ -17,6 +17,8 @@ The homepage and chat widget are open to anyone — try asking about order track
 
 > Both backend services run on a free-tier host that spins down after 15 minutes of inactivity — the first request after a while (a chat message, or a dashboard login) can take 15–30+ seconds while it wakes back up. Everything after that is fast.
 
+**Recorded walkthrough:** [docs/demo.webm](docs/demo.webm) — a real, unedited screen recording of the exact flow below (grounded answer → escalation → agent login → sentiment-flagged ticket → agent reply), captured live against the deployed URL above. It's a silent capture (no voiceover); [docs/demo-script.md](docs/demo-script.md) is the full narrated script it follows, for anyone re-recording a presented version.
+
 ## Features
 
 - **RAG-grounded chat** — every reply is built from chunks of real, ingested documents (pgvector cosine-similarity retrieval), not the model improvising.
@@ -59,7 +61,9 @@ ai-customer-support-platform/
 ├── docs/
 │   ├── architecture.md       # written architecture overview
 │   ├── architecture/         # system + RAG-flow diagrams (SVG)
-│   └── api-spec/             # Laravel + FastAPI endpoint reference
+│   ├── api-spec/             # Laravel + FastAPI endpoint reference
+│   ├── demo-script.md        # narrated walkthrough script
+│   └── demo.webm             # recorded walkthrough (silent capture)
 ├── backend-laravel/          # auth, tickets, orchestration, queue jobs
 ├── ai-service-fastapi/       # chat/RAG, ingest, sentiment, summarize endpoints
 ├── frontend-react/           # chat widget + admin dashboard
