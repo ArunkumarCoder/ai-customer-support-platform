@@ -216,7 +216,7 @@ export default function HomePage() {
                 Try: <strong>&ldquo;How do I track my order?&rdquo;</strong>
               </li>
               <li>
-                Try: <strong>&ldquo;How do I get a refund?&rdquo;</strong> to see an escalation
+                Try: <strong>&ldquo;How do I reset my password?&rdquo;</strong> to see an escalation
               </li>
             </ul>
           </div>
