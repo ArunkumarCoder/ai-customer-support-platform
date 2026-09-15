@@ -165,4 +165,95 @@ class DocumentApiTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_admin_can_view_document_content(): void
+    {
+        Storage::fake('local');
+        Storage::disk('local')->put('documents/refund.txt', 'Refunds are issued within 5-7 business days.');
+
+        $admin = $this->makeAgent('admin');
+
+        $document = Document::create([
+            'title' => 'Refund Policy',
+            'source_file' => 'documents/refund.txt',
+            'uploaded_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson("/api/documents/{$document->id}");
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('title', 'Refund Policy');
+        $response->assertJsonPath('content_available', true);
+        $response->assertJsonPath('content', 'Refunds are issued within 5-7 business days.');
+        $response->assertJsonPath('uploader.email', $admin->email);
+    }
+
+    public function test_viewing_document_with_missing_file_returns_content_unavailable(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->makeAgent('admin');
+
+        $document = Document::create([
+            'title' => 'Refund Policy',
+            'source_file' => 'documents/does-not-exist.txt',
+            'uploaded_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson("/api/documents/{$document->id}");
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('content_available', false);
+        $response->assertJsonPath('content', null);
+    }
+
+    public function test_viewing_nonexistent_document_returns_404(): void
+    {
+        $admin = $this->makeAgent('admin');
+
+        $response = $this->actingAs($admin, 'sanctum')->getJson('/api/documents/999');
+
+        $response->assertStatus(404);
+    }
+
+    public function test_non_admin_agent_is_forbidden_from_viewing_document(): void
+    {
+        Storage::fake('local');
+
+        $admin = $this->makeAgent('admin');
+        $agent = $this->makeAgent('agent');
+
+        $document = Document::create([
+            'title' => 'Refund Policy',
+            'source_file' => 'documents/refund.txt',
+            'uploaded_by' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($agent, 'sanctum')->getJson("/api/documents/{$document->id}");
+
+        $response->assertStatus(403);
+    }
+
+    public function test_upload_is_rejected_when_uploads_are_disabled(): void
+    {
+        config(['services.documents.uploads_enabled' => false]);
+
+        Storage::fake('local');
+        Queue::fake();
+        Http::fake();
+
+        $admin = $this->makeAgent('admin');
+        $file = UploadedFile::fake()->create('policy.txt', 10, 'text/plain');
+
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/documents', [
+            'title' => 'Refund Policy',
+            'file' => $file,
+        ]);
+
+        $response->assertStatus(403);
+        $response->assertJsonPath('message', 'Document uploads are temporarily disabled.');
+
+        Queue::assertNothingPushed();
+        $this->assertDatabaseCount('documents', 0);
+    }
 }

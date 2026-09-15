@@ -15,9 +15,19 @@ export interface Document {
   created_at: string
 }
 
+export interface DocumentDetail extends Document {
+  content: string | null
+  content_available: boolean
+}
+
 export async function fetchDocuments(): Promise<Document[]> {
   const response = await apiClient.get('/documents')
   return response.data.data ?? response.data
+}
+
+export async function fetchDocument(id: number): Promise<DocumentDetail> {
+  const response = await apiClient.get<DocumentDetail>(`/documents/${id}`)
+  return response.data
 }
 
 export async function uploadDocument(title: string, file: File): Promise<Document> {

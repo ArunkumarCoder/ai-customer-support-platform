@@ -150,3 +150,29 @@ export function MailIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function EyeIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+export function InfoIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5.5M12 7.5h.01" />
+    </svg>
+  )
+}
+
+export function XIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}

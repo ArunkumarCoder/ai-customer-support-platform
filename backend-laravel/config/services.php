@@ -40,4 +40,10 @@ return [
         'secret' => env('AI_SERVICE_SECRET'),
     ],
 
+    'documents' => [
+        // Temporary kill-switch for POST /documents (data/token limitations).
+        // Flip to true (or unset) to re-enable — no code change needed.
+        'uploads_enabled' => env('DOCUMENT_UPLOADS_ENABLED', true),
+    ],
+
 ];
